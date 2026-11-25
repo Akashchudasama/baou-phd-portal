@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BAOU PhD & Research Scholars Weekly Supervision Portal | Prof. (Dr.) Ami Upadhyay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Playfair Display', 'serif'],
+          },
+          colors: {
+            baou: {
+              navy: '#0f2537',
+              blue: '#1a3c5a',
+              gold: '#d4a017',
+              goldLight: '#f8efd4',
+              cream: '#faf9f6',
+              slate: '#334155'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #f4f6f9; color: #1e293b; }
+    .fade-in { animation: fadeIn 0.25s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- Top Institutional Header -->
+  <header class="bg-baou-navy text-white border-b-4 border-baou-gold shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5">
+        <div class="w-11 h-11 rounded-lg bg-baou-gold/20 border border-baou-gold flex items-center justify-center text-baou-gold font-serif font-bold text-xl shrink-0">
+          🎓
+        </div>
+        <div>
+          <p class="text-[11px] uppercase tracking-widest text-baou-gold font-semibold">Dr. Babasaheb Ambedkar Open University</p>
+          <h1 class="text-base sm:text-lg font-bold tracking-tight leading-snug">PhD & Research Scholars Weekly Supervision Portal</h1>
+          <p class="text-xs text-slate-300">Under the Guidance of <span class="text-white font-medium">Prof. (Dr.) Ami Upadhyay</span>, Hon'ble Vice-Chancellor</p>
+        </div>
+      </div>
+
+      <!-- Navigation Actions -->
+      <div id="headerNav" class="flex items-center gap-2.5">
+        <button onclick="switchPublicTab('login')" id="navLoginBtn" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium bg-white/10 hover:bg-white/20 text-white transition">
+          🔐 Portal Login
+        </button>
+        <button onclick="switchPublicTab('register')" id="navRegisterBtn" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-baou-gold text-baou-navy hover:bg-amber-400 transition shadow-sm">
+          📝 Scholar / Alumni Form
+        </button>
+      </div>
+
+      <!-- Logged-In User Badge -->
+      <div id="userSessionBar" class="hidden items-center gap-3">
+        <div class="text-right hidden sm:block">
+          <p id="sessionUserName" class="text-sm font-semibold text-white leading-none"></p>
+          <p id="sessionUserRole" class="text-[11px] text-baou-gold mt-1 font-medium"></p>
+        </div>
+        <button onclick="logout()" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white transition shadow-sm">
+          Sign Out
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toast Notification Banner -->
+  <div id="toastBanner" class="hidden fixed bottom-5 right-5 z-50 max-w-md px-4 py-3 rounded-xl shadow-xl border text-sm font-medium fade-in"></div>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Supabase Setup Warning Banner (Auto-hides once keys are pasted) -->
+    <div id="supabaseConfigWarning" class="hidden max-w-3xl mx-auto mb-6 p-4 rounded-xl bg-rose-50 border border-rose-300 text-rose-950 text-xs">
+      <strong>⚠️ Supabase Credentials Required:</strong> Open <code>index.html</code> and replace <code>YOUR_SUPABASE_URL</code> and <code>YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY</code> with your Supabase project credentials so data saves across all devices.
+    </div>
+
+    <!-- =========================================================
+         VIEW 1: PUBLIC PORTAL (CENTERED LOGIN & REGISTRATION ONLY)
+    ========================================================== -->
+    <section id="publicView" class="fade-in max-w-3xl mx-auto">
+      <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
+        <!-- Tab Switcher -->
+        <div class="grid grid-cols-2 border-b border-slate-200 bg-slate-50">
+          <button id="tabBtnLogin" onclick="switchPublicTab('login')" class="py-4 px-4 text-sm font-bold text-baou-navy border-b-2 border-baou-navy bg-white transition">
+            🔐 Portal Login (VC / Scholar)
+          </button>
+          <button id="tabBtnRegister" onclick="switchPublicTab('register')" class="py-4 px-4 text-sm font-semibold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition">
+            📝 New Student / Alumni Form
+          </button>
+        </div>
+
+        <!-- TAB A: DIRECT LOGIN FORM -->
+        <div id="loginTabContent" class="p-6 sm:p-10 fade-in">
+          <div class="mb-6">
+            <h2 class="text-xl font-bold text-slate-900">Sign In to Supervision Dashboard</h2>
+            <p class="text-sm text-slate-500 mt-1">Enter your registered Email ID and Password to access your workspace.</p>
+          </div>
+
+          <div id="loginAlert" class="hidden mb-5 p-3.5 rounded-xl text-sm border"></div>
+
+          <form onsubmit="handleLogin(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Email Address (User ID)</label>
+              <input type="email" id="loginEmail" required placeholder="Enter registered email address"
+                class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-baou-navy focus:border-baou-navy outline-none text-sm transition" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Password (Mobile Number for Scholars)</label>
+              <input type="password" id="loginPassword" required placeholder="Enter password"
+                class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-baou-navy focus:border-baou-navy outline-none text-sm transition" />
+            </div>
+
+            <button type="submit" id="loginSubmitBtn" class="w-full py-3.5 px-4 rounded-xl bg-baou-navy hover:bg-baou-blue text-white font-semibold text-sm shadow-md transition">
+              Access Portal Dashboard →
+            </button>
+          </form>
+
+          <div class="mt-6 pt-5 border-t border-slate-100 text-center">
+            <p class="text-xs text-slate-500">
+              Not registered yet?
+              <button type="button" onclick="switchPublicTab('register')" class="text-baou-navy font-bold underline ml-1">Fill PhD Scholar / Alumni Form</button>
+            </p>
+          </div>
+        </div>
+
+        <!-- TAB B: SCHOLAR / ALUMNI REGISTRATION FORM -->
+        <div id="registerTabContent" class="hidden p-6 sm:p-10 fade-in">
+          <div class="mb-6">
+            <h2 class="text-xl font-bold text-slate-900">PhD Scholar / Alumni Registration Request</h2>
+            <p class="text-sm text-slate-500 mt-1">Submit your primary details and PhD progress till date to <span class="font-semibold text-slate-700">Prof. (Dr.) Ami Upadhyay</span>. Once approved, your Email & Mobile Number activate your login.</p>
+          </div>
+
+          <form onsubmit="handleRegistration(event)" class="space-y-5">
+            <!-- Scholar Category Toggle -->
+            <div class="grid sm:grid-cols-2 gap-4 p-4 rounded-xl bg-amber-50/70 border border-amber-200">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Scholar Status *</label>
+                <select id="regCategory" onchange="toggleAlumniFields()" required class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm font-medium focus:ring-2 focus:ring-baou-navy outline-none">
+                  <option value="active">Currently Doing PhD (Active Scholar)</option>
+                  <option value="passed">Passed / Completed PhD (Alumni Scholar)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">BAOU Enrollment / Reg. No.</label>
+                <input type="text" id="regEnrollment" placeholder="e.g., BAOU/PHD/2023/041"
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:ring-2 focus:ring-baou-navy outline-none" />
+              </div>
+
+              <!-- Conditional Alumni Field -->
+              <div id="alumniExtraField" class="hidden sm:col-span-2 pt-2 border-t border-amber-200/80 grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-amber-900 mb-1.5">PhD Award / Passing Year *</label>
+                  <input type="text" id="regPassingYear" placeholder="e.g., 2024 or 2025"
+                    class="w-full px-3.5 py-2.5 rounded-lg border border-amber-300 bg-white text-sm focus:ring-2 focus:ring-baou-navy outline-none" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-amber-900 mb-1.5">Current Affiliation / Designation</label>
+                  <input type="text" id="regCurrentRole" placeholder="e.g., Assistant Professor, Gujarat University"
+                    class="w-full px-3.5 py-2.5 rounded-lg border border-amber-300 bg-white text-sm focus:ring-2 focus:ring-baou-navy outline-none" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Primary Credentials -->
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Full Name *</label>
+                <input type="text" id="regName" required placeholder="e.g., Rajeshkumar Patel"
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-baou-navy outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Department / School *</label>
+                <input type="text" id="regDepartment" required placeholder="e.g., School of Education / Commerce"
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-baou-navy outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Email Address (Will be User ID) *</label>
+                <input type="email" id="regEmail" required placeholder="yourname@baou.edu.in"
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-baou-navy outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Mobile Number (Will be Password) *</label>
+                <input type="tel" id="regPhone" required pattern="[0-9]{10}" title="Enter 10-digit mobile number" placeholder="10-digit mobile number"
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-baou-navy outline-none" />
+              </div>
+            </div>
+
+            <!-- PhD Research & Scopus Details -->
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">PhD Research Topic / Thesis Title *</label>
+              <input type="text" id="regTopic" required placeholder="Enter complete approved or proposed PhD thesis title"
+                class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-baou-navy outline-none" />
+            </div>
+
+            <div class="grid sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Scopus Paper Status *</label>
+                <select id="regScopusStatus" required class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:ring-2 focus:ring-baou-navy outline-none">
+                  <option value="Not Started">Not Started</option>
+                  <option value="Drafting Manuscript">Drafting Manuscript</option>
+                  <option value="Submitted / Under Review">Submitted / Under Review</option>
+                  <option value="Accepted">Accepted</option>
+                  <option value="Published in Scopus">Published in Scopus</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Scopus Paper Title</label>
+                <input type="text" id="regScopusTitle" placeholder="Paper title (if any)"
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-baou-navy outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Journal Name</label>
+                <input type="text" id="regScopusJournal" placeholder="Target or published journal"
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-baou-navy outline-none" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">PhD Progress Till Date & Current Milestones *</label>
+              <textarea id="regProgressTillDate" rows="3" required placeholder="Summarize coursework completion, RDC approval, literature review, data collection, chapters completed, or final viva status..."
+                class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-baou-navy outline-none"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Current Challenges / Issues Facing (Optional)</label>
+              <input type="text" id="regInitialIssues" placeholder="Any methodological, data access, or journal submission hurdles"
+                class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-baou-navy outline-none" />
+            </div>
+
+            <div class="pt-2 flex flex-wrap items-center justify-between gap-4">
+              <p class="text-xs text-slate-500">Request will be sent directly to <strong class="text-slate-700">Prof. (Dr.) Ami Upadhyay</strong> for approval.</p>
+              <button type="submit" id="regSubmitBtn" class="px-6 py-3 rounded-xl bg-baou-navy hover:bg-baou-blue text-white font-semibold text-sm shadow-md transition">
+                Submit Request to VC Ma'am ✓
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         VIEW 2: VICE-CHANCELLOR (DR. AMI UPADHYAY) DASHBOARD
+    ========================================================== -->
+    <section id="vcDashboardView" class="hidden fade-in space-y-6">
+      <!-- VC Welcome Banner -->
+      <div class="bg-baou-navy text-white rounded-2xl p-6 shadow-md border-l-8 border-baou-gold flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <span class="px-2.5 py-1 rounded-full bg-baou-gold/20 text-baou-gold text-xs font-bold uppercase tracking-wider">Vice-Chancellor Supervision Desk</span>
+          <h2 class="font-serif text-2xl font-bold mt-2">Welcome, Prof. (Dr.) Ami Upadhyay</h2>
+          <p class="text-sm text-slate-300 mt-1">Review scholar approval requests, Sunday weekly research progress reports, Scopus publication statuses, and active bottlenecks.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="refreshVCData()" class="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-semibold text-white transition">
+            🔄 Sync Live Data
+          </button>
+          <div class="bg-white/10 px-4 py-2.5 rounded-xl border border-white/15 text-right">
+            <p class="text-[11px] uppercase tracking-wider text-baou-gold font-semibold">Weekly Review Cycle</p>
+            <p id="currentSundayBadge" class="text-xs sm:text-sm font-bold text-white mt-0.5"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Active PhD Scholars</p>
+          <p id="vcStatActive" class="text-2xl font-bold text-baou-navy mt-1">0</p>
+          <p class="text-[11px] text-emerald-600 font-medium mt-1">Approved & Reporting</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Pending Approvals</p>
+          <p id="vcStatPending" class="text-2xl font-bold text-amber-600 mt-1">0</p>
+          <p class="text-[11px] text-slate-500 mt-1">Awaiting VC Verification</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Scopus Published</p>
+          <p id="vcStatScopus" class="text-2xl font-bold text-indigo-600 mt-1">0</p>
+          <p class="text-[11px] text-slate-500 mt-1">Indexed Publications</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Issues Flagged</p>
+          <p id="vcStatIssues" class="text-2xl font-bold text-rose-600 mt-1">0</p>
+          <p class="text-[11px] text-rose-600 font-medium mt-1">Needs Guidance</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm col-span-2 lg:col-span-1">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Passed / Alumni</p>
+          <p id="vcStatAlumni" class="text-2xl font-bold text-teal-700 mt-1">0</p>
+          <p class="text-[11px] text-slate-500 mt-1">Awarded PhD Scholars</p>
+        </div>
+      </div>
+
+      <!-- Pending Requests Section -->
+      <div id="pendingRequestsCard" class="bg-white rounded-2xl border border-amber-300 shadow-sm overflow-hidden">
+        <div class="bg-amber-50 px-6 py-4 border-b border-amber-200 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+            <h3 class="text-base font-bold text-amber-950">New Student & Alumni Approval Requests</h3>
+          </div>
+          <span id="pendingCountPill" class="px-3 py-1 rounded-full bg-amber-200 text-amber-900 text-xs font-bold">0 Pending</span>
+        </div>
+        <div id="pendingRequestsList" class="divide-y divide-slate-200"></div>
+      </div>
+
+      <!-- Main Scholars Directory & Sunday Review Tracker -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">PhD Scholars & Alumni Supervision Roster</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Click any scholar to inspect Sunday weekly logs, Scopus updates, and post VC remarks.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="vcFilterSelect" onchange="renderVCDashboard()" class="px-3.5 py-2 rounded-lg border border-slate-300 text-xs font-semibold bg-slate-50 text-slate-700 outline-none">
+              <option value="all">All Approved Scholars</option>
+              <option value="active">Active PhD Scholars Only</option>
+              <option value="passed">Passed / Alumni Scholars Only</option>
+              <option value="issues">Scholars Facing Issues</option>
+            </select>
+            <input type="text" id="vcSearchInput" oninput="renderVCDashboard()" placeholder="Search name, topic, email..."
+              class="px-3.5 py-2 rounded-lg border border-slate-300 text-xs outline-none focus:ring-2 focus:ring-baou-navy" />
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                <th class="py-3.5 px-5">Scholar & Credentials</th>
+                <th class="py-3.5 px-4">Category</th>
+                <th class="py-3.5 px-4">Scopus Status</th>
+                <th class="py-3.5 px-4">Latest Weekly / Sunday Update</th>
+                <th class="py-3.5 px-4">Current Issues</th>
+                <th class="py-3.5 px-5 text-right">Supervision Action</th>
+              </tr>
+            </thead>
+            <tbody id="vcScholarsTableBody" class="divide-y divide-slate-200 text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         VIEW 3: APPROVED SCHOLAR / ALUMNI DASHBOARD
+    ========================================================== -->
+    <section id="scholarDashboardView" class="hidden fade-in space-y-6">
+      <!-- Scholar Header Card -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-wrap items-start justify-between gap-4">
+        <div class="space-y-1.5 max-w-3xl">
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="schBadgeCategory" class="px-3 py-1 rounded-full text-xs font-bold"></span>
+            <span id="schBadgeEnroll" class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-mono"></span>
+          </div>
+          <h2 id="schHeaderName" class="text-2xl font-bold text-slate-900"></h2>
+          <p id="schHeaderTopic" class="text-sm text-slate-600 font-medium"></p>
+          <p class="text-xs text-slate-500">Supervisor: <strong class="text-baou-navy">Prof. (Dr.) Ami Upadhyay</strong>, Hon'ble Vice-Chancellor, BAOU</p>
+        </div>
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-1 min-w-[230px]">
+          <p class="font-bold text-slate-700 uppercase tracking-wider text-[10px]">Active Portal Credentials</p>
+          <p class="text-slate-600">User ID: <span id="schCredEmail" class="font-semibold text-slate-900"></span></p>
+          <p class="text-slate-600">Password: <span id="schCredPhone" class="font-semibold text-slate-900"></span></p>
+        </div>
+      </div>
+
+      <!-- VC Remarks Banner (if any) -->
+      <div id="vcFeedbackAlert" class="hidden bg-amber-50 border-l-4 border-baou-gold p-4 rounded-r-xl shadow-sm">
+        <p class="text-xs font-bold uppercase tracking-wider text-amber-900">📌 Latest Guidance / Remark from Prof. (Dr.) Ami Upadhyay</p>
+        <p id="vcFeedbackText" class="text-sm text-amber-950 mt-1 font-medium"></p>
+      </div>
+
+      <div class="grid lg:grid-cols-12 gap-6">
+        <!-- Left Column: Daily / Sunday Weekly Work Update & Scopus Status (7 cols) -->
+        <div class="lg:col-span-7 space-y-6">
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+              <div>
+                <h3 class="text-lg font-bold text-slate-900">Submit Daily / Sunday Weekly Work Report</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Log daily progress or compile your complete weekly work for Sunday VC review.</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold">Sunday Review Ready</span>
+            </div>
+
+            <form onsubmit="handleScholarWeeklyUpdate(event)" class="space-y-4">
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Log Type *</label>
+                  <select id="updEntryType" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm font-medium outline-none focus:ring-2 focus:ring-baou-navy">
+                    <option value="Sunday Weekly Compilation">Sunday Weekly Compilation (Full Week)</option>
+                    <option value="Daily Research Log">Daily Research Progress Log</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Week / Date Reference *</label>
+                  <input type="text" id="updWeekLabel" required placeholder="e.g., Week 47 (Nov 18 – Nov 24, 2026)"
+                    class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-baou-navy" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Work Completed (Literature, Data, Chapters, Papers) *</label>
+                <textarea id="updWorkSummary" rows="4" required placeholder="Detail what you accomplished today or across the entire week..."
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-baou-navy"></textarea>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Issues / Bottlenecks Facing (Leave blank if none)</label>
+                <textarea id="updIssues" rows="2" placeholder="Specify any guidance required from Dr. Ami Upadhyay Ma'am..."
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-baou-navy"></textarea>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Next Week Action Plan</label>
+                <input type="text" id="updNextPlan" placeholder="Target milestones for upcoming week"
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-baou-navy" />
+              </div>
+
+              <button type="submit" id="updWorkBtn" class="w-full py-3 rounded-xl bg-baou-navy hover:bg-baou-blue text-white font-semibold text-sm shadow transition">
+                Save & Submit Progress to VC Dashboard ✓
+              </button>
+            </form>
+          </div>
+
+          <!-- Progress History Timeline -->
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <h3 class="text-base font-bold text-slate-900 mb-4">Your Submitted Weekly & Daily Logs</h3>
+            <div id="scholarLogsHistory" class="space-y-4"></div>
+          </div>
+        </div>
+
+        <!-- Right Column: Scopus Publication Tracker & PhD Till-Date Profile (5 cols) -->
+        <div class="lg:col-span-5 space-y-6">
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4">📚 Scopus Publication & Research Status</h3>
+            <form onsubmit="handleScopusUpdate(event)" class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Current Scopus Publication Status</label>
+                <select id="updScopusStatus" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm font-semibold outline-none focus:ring-2 focus:ring-baou-navy">
+                  <option value="Not Started">Not Started</option>
+                  <option value="Drafting Manuscript">Drafting Manuscript</option>
+                  <option value="Submitted / Under Review">Submitted / Under Review</option>
+                  <option value="Accepted">Accepted</option>
+                  <option value="Published in Scopus">Published in Scopus</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Manuscript / Paper Title</label>
+                <input type="text" id="updScopusTitle" placeholder="Enter Scopus paper title"
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-baou-navy" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Journal Name & ISSN / DOI</label>
+                <input type="text" id="updScopusJournal" placeholder="Journal name, ISSN, or DOI link"
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-baou-navy" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Overall PhD Progress Summary</label>
+                <textarea id="updTillDateSummary" rows="3"
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-baou-navy"></textarea>
+              </div>
+              <button type="submit" id="updScopusBtn" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow transition">
+                Update Scopus & Profile Details
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================
+       MODAL: VC SCHOLAR INSPECTION & SUNDAY FEEDBACK MODAL
+  ========================================================== -->
+  <div id="vcInspectModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8 fade-in">
+      <div class="bg-baou-navy text-white px-6 py-4 flex items-center justify-between">
+        <div>
+          <span id="modalCategoryBadge" class="text-[11px] uppercase tracking-wider font-bold text-baou-gold"></span>
+          <h3 id="modalScholarName" class="text-lg font-bold"></h3>
+        </div>
+        <button onclick="closeInspectModal()" class="text-slate-300 hover:text-white text-xl font-bold px-2">✕</button>
+      </div>
+
+      <div class="p-6 max-h-[78vh] overflow-y-auto space-y-5">
+        <!-- Scholar Primary Info Grid -->
+        <div class="grid sm:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
+          <div><span class="text-slate-500">Email (User ID):</span> <strong id="modalEmail" class="text-slate-900"></strong></div>
+          <div><span class="text-slate-500">Mobile (Password):</span> <strong id="modalPhone" class="text-slate-900"></strong></div>
+          <div><span class="text-slate-500">Enrollment No:</span> <strong id="modalEnroll" class="text-slate-900"></strong></div>
+          <div><span class="text-slate-500">Department:</span> <strong id="modalDept" class="text-slate-900"></strong></div>
+          <div class="sm:col-span-2"><span class="text-slate-500">Thesis Topic:</span> <strong id="modalTopic" class="text-slate-900"></strong></div>
+          <div class="sm:col-span-2"><span class="text-slate-500">Progress Till Date:</span> <p id="modalTillDate" class="text-slate-800 mt-1"></p></div>
+        </div>
+
+        <!-- Scopus Info -->
+        <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50/50 text-xs space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-indigo-950 uppercase tracking-wider">Scopus Publication Record</span>
+            <span id="modalScopusBadge" class="px-2.5 py-0.5 rounded-full font-bold"></span>
+          </div>
+          <p class="text-slate-700 pt-1"><strong>Paper Title:</strong> <span id="modalScopusTitle"></span></p>
+          <p class="text-slate-700"><strong>Journal / DOI:</strong> <span id="modalScopusJournal"></span></p>
+        </div>
+
+        <!-- Post VC Sunday Guidance / Remark -->
+        <form onsubmit="saveVCRemark(event)" class="bg-amber-50/80 p-4 rounded-xl border border-amber-200 space-y-2.5">
+          <label class="block text-xs font-bold uppercase tracking-wider text-amber-950">VC Sunday Review Remark / Instruction to Scholar</label>
+          <textarea id="modalVCRemarkInput" rows="2" placeholder="Write feedback, approval note, or instructions for next week..."
+            class="w-full px-3 py-2 rounded-lg border border-amber-300 bg-white text-sm outline-none focus:ring-2 focus:ring-baou-navy"></textarea>
+          <div class="flex justify-end">
+            <button type="submit" id="saveRemarkBtn" class="px-4 py-2 rounded-lg bg-baou-navy hover:bg-baou-blue text-white text-xs font-semibold transition">
+              Send Remark to Scholar
+            </button>
+          </div>
+        </form>
+
+        <!-- Weekly Logs Feed -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-3">Submitted Weekly & Daily Progress Logs</h4>
+          <div id="modalLogsContainer" class="space-y-3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-4 px-6 text-center text-xs text-slate-500">
+    <p>Dr. Babasaheb Ambedkar Open University (BAOU) • PhD Supervision & Weekly Progress Monitoring System</p>
+  </footer>
+
+  <!-- =========================================================
+       SUPABASE CLOUD CONFIGURATION & APPLICATION LOGIC
+  ========================================================== -->
+  <script>
+    // =========================================================
+    // 1. PASTE YOUR SUPABASE PROJECT URL & PUBLISHABLE / ANON KEY HERE
+    // =========================================================
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+    const SUPABASE_KEY = 'YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY';
+
+    const SESSION_KEY = 'baou_phd_session_v1';
+    const VC_EMAIL = 'vc@baou.edu.in';
+    const VC_PASS = 'vc@123';
+
+    let supabaseClient = null;
+    let scholarsCache = [];
+    let currentUser = null;
+    let activeInspectScholarId = null;
+
+    function isSupabaseConfigured() {
+      return (
+        SUPABASE_URL &&
+        SUPABASE_KEY &&
+        !SUPABASE_URL.includes('YOUR_SUPABASE_URL') &&
+        !SUPABASE_KEY.includes('YOUR_SUPABASE_PUBLISHABLE')
+      );
+    }
+
+    async function initApp() {
+      setSundayBadge();
+
+      if (!isSupabaseConfigured()) {
+        document.getElementById('supabaseConfigWarning').classList.remove('hidden');
+      } else {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      }
+
+      const savedSession = sessionStorage.getItem(SESSION_KEY);
+      if (savedSession) {
+        try {
+          currentUser = JSON.parse(savedSession);
+        } catch (e) {
+          currentUser = null;
+        }
+      }
+
+      await renderCurrentRoute();
+    }
+
+    function setSundayBadge() {
+      const now = new Date();
+      const day = now.getDay();
+      const diffToSunday = day === 0 ? 0 : 7 - day;
+      const nextSunday = new Date(now);
+      nextSunday.setDate(now.getDate() + diffToSunday);
+      const opts = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
+      const el = document.getElementById('currentSundayBadge');
+      if (el) el.textContent = 'Next Sunday Check: ' + nextSunday.toLocaleDateString('en-IN', opts);
+    }
+
+    function showToast(message, type = 'success') {
+      const banner = document.getElementById('toastBanner');
+      banner.textContent = message;
+      banner.className = 'fixed bottom-5 right-5 z-50 max-w-md px-4 py-3 rounded-xl shadow-xl border text-sm font-medium fade-in ';
+      if (type === 'error') {
+        banner.className += 'bg-rose-50 border-rose-300 text-rose-900';
+      } else if (type === 'warning') {
+        banner.className += 'bg-amber-50 border-amber-300 text-amber-950';
+      } else {
+        banner.className += 'bg-emerald-50 border-emerald-300 text-emerald-950';
+      }
+      banner.classList.remove('hidden');
+      setTimeout(() => banner.classList.add('hidden'), 4500);
+    }
+
+    function switchPublicTab(tab) {
+      const loginContent = document.getElementById('loginTabContent');
+      const regContent = document.getElementById('registerTabContent');
+      const tabLogin = document.getElementById('tabBtnLogin');
+      const tabReg = document.getElementById('tabBtnRegister');
+
+      if (tab === 'login') {
+        loginContent.classList.remove('hidden');
+        regContent.classList.add('hidden');
+        tabLogin.className = 'py-4 px-4 text-sm font-bold text-baou-navy border-b-2 border-baou-navy bg-white transition';
+        tabReg.className = 'py-4 px-4 text-sm font-semibold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition';
+      } else {
+        loginContent.classList.add('hidden');
+        regContent.classList.remove('hidden');
+        tabReg.className = 'py-4 px-4 text-sm font-bold text-baou-navy border-b-2 border-baou-navy bg-white transition';
+        tabLogin.className = 'py-4 px-4 text-sm font-semibold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition';
+      }
+    }
+
+    function toggleAlumniFields() {
+      const cat = document.getElementById('regCategory').value;
+      const extra = document.getElementById('alumniExtraField');
+      const yearInput = document.getElementById('regPassingYear');
+      if (cat === 'passed') {
+        extra.classList.remove('hidden');
+        yearInput.required = true;
+      } else {
+        extra.classList.add('hidden');
+        yearInput.required = false;
+      }
+    }
+
+    // =========================================================
+    // REGISTRATION HANDLER (INSERTS INTO SUPABASE)
+    // =========================================================
+    async function handleRegistration(e) {
+      e.preventDefault();
+      if (!supabaseClient) {
+        showToast('Please configure SUPABASE_URL and SUPABASE_KEY in index.html first.', 'error');
+        return;
+      }
+
+      const email = document.getElementById('regEmail').value.trim().toLowerCase();
+      const phone = document.getElementById('regPhone').value.trim();
+
+      if (email === VC_EMAIL) {
+        showToast('This email is reserved for the Vice-Chancellor account.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('regSubmitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Submitting Request...';
+
+      try {
+        const { data: existing, error: checkError } = await supabaseClient
+          .from('phd_scholars')
+          .select('id, approval_status')
+          .eq('email', email)
+          .maybeSingle();
+
+        if (checkError) throw checkError;
+
+        if (existing) {
+          showToast('An application with this Email ID already exists (' + existing.approval_status.toUpperCase() + ').', 'warning');
+          btn.disabled = false;
+          btn.textContent = "Submit Request to VC Ma'am ✓";
+          return;
+        }
+
+        const category = document.getElementById('regCategory').value;
+        const payload = {
+          category: category,
+          enrollment_no: document.getElementById('regEnrollment').value.trim() || 'Pending Allotment',
+          passing_year: category === 'passed' ? document.getElementById('regPassingYear').value.trim() : '',
+          current_role: category === 'passed' ? document.getElementById('regCurrentRole').value.trim() : '',
+          name: document.getElementById('regName').value.trim(),
+          department: document.getElementById('regDepartment').value.trim(),
+          email: email,
+          phone: phone,
+          topic: document.getElementById('regTopic').value.trim(),
+          scopus_status: document.getElementById('regScopusStatus').value,
+          scopus_title: document.getElementById('regScopusTitle').value.trim(),
+          scopus_journal: document.getElementById('regScopusJournal').value.trim(),
+          progress_till_date: document.getElementById('regProgressTillDate').value.trim(),
+          current_issues: document.getElementById('regInitialIssues').value.trim(),
+          approval_status: 'pending',
+          vc_remark: '',
+          logs: []
+        };
+
+        const { error: insertError } = await supabaseClient
+          .from('phd_scholars')
+          .insert([payload]);
+
+        if (insertError) throw insertError;
+
+        e.target.reset();
+        toggleAlumniFields();
+        switchPublicTab('login');
+
+        const alertBox = document.getElementById('loginAlert');
+        alertBox.className = 'mb-5 p-3.5 rounded-xl text-xs bg-emerald-50 border border-emerald-300 text-emerald-950';
+        alertBox.innerHTML = `<strong>Request Sent to Prof. (Dr.) Ami Upadhyay!</strong><br>Once Ma'am approves your request, log in using Email: <strong>${escapeHtml(email)}</strong> and Password: <strong>${escapeHtml(phone)}</strong>.`;
+        alertBox.classList.remove('hidden');
+
+        showToast('Registration submitted to cloud! Awaiting approval from VC Ma’am.');
+      } catch (err) {
+        console.error(err);
+        showToast('Submission failed: ' + (err.message || 'Check Supabase table & RLS policies.'), 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Submit Request to VC Ma'am ✓";
+      }
+    }
+
+    // =========================================================
+    // AUTHENTICATION HANDLER (QUERIES SUPABASE)
+    // =========================================================
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+      const pass = document.getElementById('loginPassword').value.trim();
+      const alertBox = document.getElementById('loginAlert');
+      alertBox.classList.add('hidden');
+
+      if (!supabaseClient) {
+        showToast('Please configure SUPABASE_URL and SUPABASE_KEY in index.html first.', 'error');
+        return;
+      }
+
+      if (email === VC_EMAIL && pass === VC_PASS) {
+        currentUser = { role: 'vc' };
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+        await renderCurrentRoute();
+        showToast('Welcome, Prof. (Dr.) Ami Upadhyay.');
+        return;
+      }
+
+      const btn = document.getElementById('loginSubmitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Verifying Credentials...';
+
+      try {
+        const { data: scholar, error } = await supabaseClient
+          .from('phd_scholars')
+          .select('*')
+          .eq('email', email)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (!scholar) {
+          alertBox.className = 'mb-5 p-3.5 rounded-xl text-xs bg-rose-50 border border-rose-300 text-rose-900';
+          alertBox.textContent = 'No account found with this Email ID. Please submit the Scholar / Alumni Form first.';
+          alertBox.classList.remove('hidden');
+          return;
+        }
+
+        if (scholar.phone !== pass) {
+          alertBox.className = 'mb-5 p-3.5 rounded-xl text-xs bg-rose-50 border border-rose-300 text-rose-900';
+          alertBox.textContent = 'Incorrect password. Use the 10-digit Mobile Number you registered in the form.';
+          alertBox.classList.remove('hidden');
+          return;
+        }
+
+        if (scholar.approval_status === 'pending') {
+          alertBox.className = 'mb-5 p-3.5 rounded-xl text-xs bg-amber-50 border border-amber-300 text-amber-950';
+          alertBox.innerHTML = `<strong>Approval Pending:</strong> Your registration is currently awaiting verification by <strong>Prof. (Dr.) Ami Upadhyay</strong>. You can log in immediately after Ma'am approves your request.`;
+          alertBox.classList.remove('hidden');
+          return;
+        }
+
+        if (scholar.approval_status === 'rejected') {
+          alertBox.className = 'mb-5 p-3.5 rounded-xl text-xs bg-rose-50 border border-rose-300 text-rose-900';
+          alertBox.textContent = 'Your registration request was declined by the Supervisor. Please contact the BAOU Research Cell.';
+          alertBox.classList.remove('hidden');
+          return;
+        }
+
+        currentUser = { role: 'scholar', scholarId: scholar.id };
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+        await renderCurrentRoute();
+        showToast('Welcome back, ' + scholar.name + '!');
+      } catch (err) {
+        console.error(err);
+        showToast('Login error: ' + (err.message || 'Unable to reach database.'), 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Access Portal Dashboard →';
+      }
+    }
+
+    async function logout() {
+      currentUser = null;
+      sessionStorage.removeItem(SESSION_KEY);
+      document.getElementById('loginEmail').value = '';
+      document.getElementById('loginPassword').value = '';
+      document.getElementById('loginAlert').classList.add('hidden');
+      await renderCurrentRoute();
+      showToast('Signed out successfully.');
+    }
+
+    // =========================================================
+    // ROUTING & VIEW RENDERER
+    // =========================================================
+    async function renderCurrentRoute() {
+      const publicView = document.getElementById('publicView');
+      const vcView = document.getElementById('vcDashboardView');
+      const schView = document.getElementById('scholarDashboardView');
+      const headerNav = document.getElementById('headerNav');
+      const sessionBar = document.getElementById('userSessionBar');
+
+      publicView.classList.add('hidden');
+      vcView.classList.add('hidden');
+      schView.classList.add('hidden');
+
+      if (!currentUser) {
+        publicView.classList.remove('hidden');
+        headerNav.classList.remove('hidden');
+        sessionBar.classList.add('hidden');
+        sessionBar.classList.remove('flex');
+        return;
+      }
+
+      headerNav.classList.add('hidden');
+      sessionBar.classList.remove('hidden');
+      sessionBar.classList.add('flex');
+
+      if (currentUser.role === 'vc') {
+        document.getElementById('sessionUserName').textContent = 'Prof. (Dr.) Ami Upadhyay';
+        document.getElementById('sessionUserRole').textContent = 'Hon’ble Vice-Chancellor (Supervisor)';
+        vcView.classList.remove('hidden');
+        await refreshVCData();
+      } else {
+        if (!supabaseClient) return;
+        const { data: scholar, error } = await supabaseClient
+          .from('phd_scholars')
+          .select('*')
+          .eq('id', currentUser.scholarId)
+          .maybeSingle();
+
+        if (error || !scholar) {
+          await logout();
+          return;
+        }
+        document.getElementById('sessionUserName').textContent = scholar.name;
+        document.getElementById('sessionUserRole').textContent = scholar.category === 'passed' ? 'Passed PhD Scholar (Alumni)' : 'Active PhD Research Scholar';
+        schView.classList.remove('hidden');
+        renderScholarDashboard(scholar);
+      }
+    }
+
+    // =========================================================
+    // VC DASHBOARD FETCH, RENDER & ACTIONS
+    // =========================================================
+    async function refreshVCData() {
+      if (!supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from('phd_scholars')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        scholarsCache = data || [];
+        renderVCDashboard();
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to fetch scholar records: ' + err.message, 'error');
+      }
+    }
+
+    function renderVCDashboard() {
+      const approved = scholarsCache.filter(s => s.approval_status === 'approved');
+      const pending = scholarsCache.filter(s => s.approval_status === 'pending');
+      const activePhds = approved.filter(s => s.category === 'active');
+      const alumniPhds = approved.filter(s => s.category === 'passed');
+      const scopusPub = approved.filter(s => s.scopus_status === 'Published in Scopus');
+      const withIssues = approved.filter(s => s.current_issues && s.current_issues.trim() !== '');
+
+      document.getElementById('vcStatActive').textContent = activePhds.length;
+      document.getElementById('vcStatPending').textContent = pending.length;
+      document.getElementById('vcStatScopus').textContent = scopusPub.length;
+      document.getElementById('vcStatIssues').textContent = withIssues.length;
+      document.getElementById('vcStatAlumni').textContent = alumniPhds.length;
+
+      // Render Pending Requests
+      const pendingCard = document.getElementById('pendingRequestsCard');
+      const pendingList = document.getElementById('pendingRequestsList');
+      document.getElementById('pendingCountPill').textContent = pending.length + ' Pending';
+
+      if (pending.length === 0) {
+        pendingList.innerHTML = `<div class="p-6 text-center text-xs text-slate-500">No pending registration requests at the moment.</div>`;
+        pendingCard.classList.remove('border-amber-400');
+        pendingCard.classList.add('border-slate-200');
+      } else {
+        pendingCard.classList.add('border-amber-400');
+        pendingList.innerHTML = pending.map(s => {
+          const submittedDate = s.created_at ? new Date(s.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+          return `
+            <div class="p-5 flex flex-wrap items-start justify-between gap-4 hover:bg-amber-50/30 transition">
+              <div class="space-y-1.5 max-w-3xl">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${s.category === 'passed' ? 'bg-teal-100 text-teal-800' : 'bg-blue-100 text-blue-800'}">
+                    ${s.category === 'passed' ? '🎓 Passed / Alumni (' + escapeHtml(s.passing_year || 'Awarded') + ')' : '🔬 Active PhD Scholar'}
+                  </span>
+                  <span class="text-xs font-mono text-slate-500">${escapeHtml(s.enrollment_no)}</span>
+                  <span class="text-xs text-slate-400">• Submitted ${submittedDate}</span>
+                </div>
+                <h4 class="text-base font-bold text-slate-900">${escapeHtml(s.name)} <span class="text-xs font-normal text-slate-500">(${escapeHtml(s.department)})</span></h4>
+                <p class="text-xs text-slate-700"><strong>Thesis Topic:</strong> ${escapeHtml(s.topic)}</p>
+                <p class="text-xs text-slate-600"><strong>Progress Till Date:</strong> ${escapeHtml(s.progress_till_date)}</p>
+                <div class="flex flex-wrap gap-4 pt-1 text-xs text-slate-600">
+                  <span>📧 User ID: <strong class="text-slate-900">${escapeHtml(s.email)}</strong></span>
+                  <span>📱 Password: <strong class="text-slate-900">${escapeHtml(s.phone)}</strong></span>
+                  <span>📚 Scopus: <strong>${escapeHtml(s.scopus_status)}</strong></span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2.5 shrink-0">
+                <button onclick="approveScholar('${s.id}')" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition">
+                  ✓ Approve & Grant Access
+                </button>
+                <button onclick="rejectScholar('${s.id}')" class="px-3.5 py-2 rounded-lg bg-white border border-rose-300 hover:bg-rose-50 text-rose-700 text-xs font-semibold transition">
+                  ✕ Decline
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Render Approved Scholars Directory
+      const filterVal = document.getElementById('vcFilterSelect').value;
+      const query = document.getElementById('vcSearchInput').value.trim().toLowerCase();
+
+      let filtered = approved.filter(s => {
+        if (filterVal === 'active' && s.category !== 'active') return false;
+        if (filterVal === 'passed' && s.category !== 'passed') return false;
+        if (filterVal === 'issues' && (!s.current_issues || s.current_issues.trim() === '')) return false;
+        if (query) {
+          const hay = `${s.name} ${s.email} ${s.topic} ${s.department} ${s.scopus_status}`.toLowerCase();
+          if (!hay.includes(query)) return false;
+        }
+        return true;
+      });
+
+      const tbody = document.getElementById('vcScholarsTableBody');
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-10 text-center text-sm text-slate-500">No scholars registered or matching your filter yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(s => {
+        const logsArr = Array.isArray(s.logs) ? s.logs : [];
+        const latestLog = logsArr.length > 0 ? logsArr[0] : null;
+        return `
+          <tr class="hover:bg-slate-50/90 transition align-top">
+            <td class="py-4 px-5">
+              <p class="font-bold text-slate-900">${escapeHtml(s.name)}</p>
+              <p class="text-xs text-slate-500 mt-0.5 line-clamp-1 max-w-xs" title="${escapeHtml(s.topic)}">${escapeHtml(s.topic)}</p>
+              <p class="text-[11px] text-slate-400 mt-1 font-mono">${escapeHtml(s.email)} • ${escapeHtml(s.phone)}</p>
+            </td>
+            <td class="py-4 px-4">
+              <span class="inline-block px-2.5 py-1 rounded-full text-[11px] font-bold ${s.category === 'passed' ? 'bg-teal-100 text-teal-800' : 'bg-blue-100 text-blue-800'}">
+                ${s.category === 'passed' ? 'Passed (' + escapeHtml(s.passing_year || 'Alumni') + ')' : 'Active PhD'}
+              </span>
+              <p class="text-[11px] text-slate-500 mt-1">${escapeHtml(s.department)}</p>
+            </td>
+            <td class="py-4 px-4">
+              <span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-bold ${getScopusBadgeClass(s.scopus_status)}">
+                ${escapeHtml(s.scopus_status)}
+              </span>
+              ${s.scopus_title ? `<p class="text-[11px] text-slate-600 mt-1 max-w-[180px] line-clamp-2">${escapeHtml(s.scopus_title)}</p>` : ''}
+            </td>
+            <td class="py-4 px-4 max-w-xs">
+              ${latestLog ? `
+                <div class="text-xs">
+                  <span class="font-bold text-baou-navy">${escapeHtml(latestLog.weekLabel)}</span>
+                  <span class="text-[10px] text-slate-400 block">${escapeHtml(latestLog.type)} • ${escapeHtml(latestLog.date)}</span>
+                  <p class="text-slate-600 mt-1 line-clamp-2">${escapeHtml(latestLog.workSummary)}</p>
+                </div>
+              ` : `<span class="text-xs text-slate-400 italic">No weekly log posted yet</span>`}
+            </td>
+            <td class="py-4 px-4 max-w-[200px]">
+              ${s.current_issues && s.current_issues.trim() !== '' ? `
+                <div class="p-2 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-800">
+                  ⚠️ ${escapeHtml(s.current_issues)}
+                </div>
+              ` : `<span class="text-xs text-emerald-700 font-medium">✓ No active issues</span>`}
+            </td>
+            <td class="py-4 px-5 text-right">
+              <button onclick="openInspectModal('${s.id}')" class="px-3.5 py-2 rounded-lg bg-baou-navy hover:bg-baou-blue text-white text-xs font-semibold shadow-xs transition">
+                Inspect & Review
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function approveScholar(id) {
+      const scholar = scholarsCache.find(s => s.id === id);
+      if (!scholar) return;
+
+      const { error } = await supabaseClient
+        .from('phd_scholars')
+        .update({ approval_status: 'approved' })
+        .eq('id', id);
+
+      if (error) {
+        showToast('Approval failed: ' + error.message, 'error');
+        return;
+      }
+
+      await refreshVCData();
+      showToast(`Approved ${scholar.name}! Their Email & Mobile Number login is now active.`);
+    }
+
+    async function rejectScholar(id) {
+      const scholar = scholarsCache.find(s => s.id === id);
+      if (!scholar) return;
+
+      const { error } = await supabaseClient
+        .from('phd_scholars')
+        .update({ approval_status: 'rejected' })
+        .eq('id', id);
+
+      if (error) {
+        showToast('Action failed: ' + error.message, 'error');
+        return;
+      }
+
+      await refreshVCData();
+      showToast(`Declined registration for ${scholar.name}.`, 'warning');
+    }
+
+    function openInspectModal(id) {
+      const s = scholarsCache.find(item => item.id === id);
+      if (!s) return;
+      activeInspectScholarId = id;
+
+      document.getElementById('modalCategoryBadge').textContent = s.category === 'passed' ? `PASSED PHD SCHOLAR (ALUMNI • ${s.passing_year || 'AWARDED'})` : 'ACTIVE PHD RESEARCH SCHOLAR';
+      document.getElementById('modalScholarName').textContent = s.name;
+      document.getElementById('modalEmail').textContent = s.email;
+      document.getElementById('modalPhone').textContent = s.phone;
+      document.getElementById('modalEnroll').textContent = s.enrollment_no;
+      document.getElementById('modalDept').textContent = s.department;
+      document.getElementById('modalTopic').textContent = s.topic;
+      document.getElementById('modalTillDate').textContent = s.progress_till_date;
+
+      const scopusBadge = document.getElementById('modalScopusBadge');
+      scopusBadge.textContent = s.scopus_status;
+      scopusBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold ' + getScopusBadgeClass(s.scopus_status);
+      document.getElementById('modalScopusTitle').textContent = s.scopus_title || 'Not specified';
+      document.getElementById('modalScopusJournal').textContent = s.scopus_journal || 'Not specified';
+
+      document.getElementById('modalVCRemarkInput').value = s.vc_remark || '';
+
+      const logsArr = Array.isArray(s.logs) ? s.logs : [];
+      const logsContainer = document.getElementById('modalLogsContainer');
+      if (logsArr.length === 0) {
+        logsContainer.innerHTML = `<p class="text-xs text-slate-500 italic p-4 bg-slate-50 rounded-xl border border-slate-200">No daily or Sunday weekly updates submitted yet.</p>`;
+      } else {
+        logsContainer.innerHTML = logsArr.map(log => `
+          <div class="p-4 rounded-xl border border-slate-200 bg-white space-y-1.5 text-xs">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="font-bold text-baou-navy">${escapeHtml(log.weekLabel)}</span>
+              <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">${escapeHtml(log.type)} • ${escapeHtml(log.date)}</span>
+            </div>
+            <p class="text-slate-700 leading-relaxed">${escapeHtml(log.workSummary)}</p>
+            ${log.issues ? `<p class="text-rose-700 font-medium pt-1">⚠️ Issue Flagged: ${escapeHtml(log.issues)}</p>` : ''}
+            ${log.nextPlan ? `<p class="text-slate-500"><strong>Next Plan:</strong> ${escapeHtml(log.nextPlan)}</p>` : ''}
+          </div>
+        `).join('');
+      }
+
+      document.getElementById('vcInspectModal').classList.remove('hidden');
+    }
+
+    function closeInspectModal() {
+      document.getElementById('vcInspectModal').classList.add('hidden');
+      activeInspectScholarId = null;
+    }
+
+    async function saveVCRemark(e) {
+      e.preventDefault();
+      if (!activeInspectScholarId) return;
+      const scholar = scholarsCache.find(s => s.id === activeInspectScholarId);
+      if (!scholar) return;
+
+      const btn = document.getElementById('saveRemarkBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      const remarkText = document.getElementById('modalVCRemarkInput').value.trim();
+      const { error } = await supabaseClient
+        .from('phd_scholars')
+        .update({ vc_remark: remarkText })
+        .eq('id', activeInspectScholarId);
+
+      btn.disabled = false;
+      btn.textContent = 'Send Remark to Scholar';
+
+      if (error) {
+        showToast('Failed to save remark: ' + error.message, 'error');
+        return;
+      }
+
+      await refreshVCData();
+      closeInspectModal();
+      showToast('Sunday review remark sent to ' + scholar.name + '.');
+    }
+
+    // =========================================================
+    // SCHOLAR DASHBOARD RENDER & UPDATES
+    // =========================================================
+    let currentScholarRecord = null;
+
+    function renderScholarDashboard(s) {
+      currentScholarRecord = s;
+      const catBadge = document.getElementById('schBadgeCategory');
+      if (s.category === 'passed') {
+        catBadge.textContent = `🎓 Passed PhD Scholar (Alumni • ${s.passing_year || 'Awarded'})`;
+        catBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-teal-100 text-teal-800';
+      } else {
+        catBadge.textContent = '🔬 Active PhD Research Scholar';
+        catBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800';
+      }
+
+      document.getElementById('schBadgeEnroll').textContent = s.enrollment_no;
+      document.getElementById('schHeaderName').textContent = s.name;
+      document.getElementById('schHeaderTopic').textContent = s.topic;
+      document.getElementById('schCredEmail').textContent = s.email;
+      document.getElementById('schCredPhone').textContent = s.phone;
+
+      const vcAlert = document.getElementById('vcFeedbackAlert');
+      if (s.vc_remark && s.vc_remark.trim() !== '') {
+        document.getElementById('vcFeedbackText').textContent = s.vc_remark;
+        vcAlert.classList.remove('hidden');
+      } else {
+        vcAlert.classList.add('hidden');
+      }
+
+      document.getElementById('updScopusStatus').value = s.scopus_status || 'Not Started';
+      document.getElementById('updScopusTitle').value = s.scopus_title || '';
+      document.getElementById('updScopusJournal').value = s.scopus_journal || '';
+      document.getElementById('updTillDateSummary').value = s.progress_till_date || '';
+
+      const logsArr = Array.isArray(s.logs) ? s.logs : [];
+      const historyDiv = document.getElementById('scholarLogsHistory');
+      if (logsArr.length === 0) {
+        historyDiv.innerHTML = `<p class="text-xs text-slate-500 italic">You haven't submitted any daily or Sunday weekly updates yet. Use the form above to post your progress.</p>`;
+      } else {
+        historyDiv.innerHTML = logsArr.map(log => `
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-1.5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-sm font-bold text-baou-navy">${escapeHtml(log.weekLabel)}</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white border border-slate-200 text-slate-600">${escapeHtml(log.type)} • ${escapeHtml(log.date)}</span>
+            </div>
+            <p class="text-xs text-slate-700 leading-relaxed">${escapeHtml(log.workSummary)}</p>
+            ${log.issues ? `<p class="text-xs text-rose-700 font-medium">⚠️ Issue Reported: ${escapeHtml(log.issues)}</p>` : ''}
+            ${log.nextPlan ? `<p class="text-xs text-slate-500"><strong>Next Plan:</strong> ${escapeHtml(log.nextPlan)}</p>` : ''}
+          </div>
+        `).join('');
+      }
+    }
+
+    async function handleScholarWeeklyUpdate(e) {
+      e.preventDefault();
+      if (!currentScholarRecord) return;
+
+      const btn = document.getElementById('updWorkBtn');
+      btn.disabled = true;
+      btn.textContent = 'Submitting Report...';
+
+      const entry = {
+        id: 'log_' + Date.now(),
+        type: document.getElementById('updEntryType').value,
+        weekLabel: document.getElementById('updWeekLabel').value.trim(),
+        workSummary: document.getElementById('updWorkSummary').value.trim(),
+        issues: document.getElementById('updIssues').value.trim(),
+        nextPlan: document.getElementById('updNextPlan').value.trim(),
+        date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+      };
+
+      const existingLogs = Array.isArray(currentScholarRecord.logs) ? currentScholarRecord.logs : [];
+      const updatedLogs = [entry, ...existingLogs];
+
+      const { data, error } = await supabaseClient
+        .from('phd_scholars')
+        .update({
+          logs: updatedLogs,
+          current_issues: entry.issues
+        })
+        .eq('id', currentScholarRecord.id)
+        .select()
+        .single();
+
+      btn.disabled = false;
+      btn.textContent = 'Save & Submit Progress to VC Dashboard ✓';
+
+      if (error) {
+        showToast('Failed to submit progress: ' + error.message, 'error');
+        return;
+      }
+
+      e.target.reset();
+      renderScholarDashboard(data);
+      showToast('Progress report submitted! Visible to Prof. (Dr.) Ami Upadhyay for Sunday review.');
+    }
+
+    async function handleScopusUpdate(e) {
+      e.preventDefault();
+      if (!currentScholarRecord) return;
+
+      const btn = document.getElementById('updScopusBtn');
+      btn.disabled = true;
+      btn.textContent = 'Updating...';
+
+      const { data, error } = await supabaseClient
+        .from('phd_scholars')
+        .update({
+          scopus_status: document.getElementById('updScopusStatus').value,
+          scopus_title: document.getElementById('updScopusTitle').value.trim(),
+          scopus_journal: document.getElementById('updScopusJournal').value.trim(),
+          progress_till_date: document.getElementById('updTillDateSummary').value.trim()
+        })
+        .eq('id', currentScholarRecord.id)
+        .select()
+        .single();
+
+      btn.disabled = false;
+      btn.textContent = 'Update Scopus & Profile Details';
+
+      if (error) {
+        showToast('Failed to update Scopus details: ' + error.message, 'error');
+        return;
+      }
+
+      renderScholarDashboard(data);
+      showToast('Scopus publication & PhD profile updated in cloud.');
+    }
+
+    // =========================================================
+    // HELPERS
+    // =========================================================
+    function getScopusBadgeClass(status) {
+      switch (status) {
+        case 'Published in Scopus': return 'bg-emerald-100 text-emerald-800';
+        case 'Accepted': return 'bg-teal-100 text-teal-800';
+        case 'Submitted / Under Review': return 'bg-indigo-100 text-indigo-800';
+        case 'Drafting Manuscript': return 'bg-amber-100 text-amber-800';
+        default: return 'bg-slate-100 text-slate-700';
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
