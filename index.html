@@ -1151,9 +1151,17 @@
                                                         ${sch.department} • Reg: <span class="text-slate-700">${sch.enrollmentNo}</span> • Login ID: <span class="text-slate-700">${sch.email}</span>
                                                     </p>
 
-                                                    <p class="text-sm text-slate-800 font-medium">
-                                                        <span class="text-slate-400 font-normal">Thesis:</span> ${sch.thesisTitle}
-                                                    </p>
+                                                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-slate-800 font-medium">
+                                                        <span><span class="text-slate-400 font-normal">Thesis:</span> ${sch.thesisTitle}</span>
+                                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700">
+                                                            <i class="fa-solid fa-book text-baou-gold"></i>
+                                                            Coursework: <strong class="${sch.courseworkStatus === 'Completed' ? 'text-emerald-700' : 'text-amber-700'}">${sch.courseworkStatus}</strong>
+                                                        </span>
+                                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700">
+                                                            <i class="fa-solid fa-list-ol text-baou-gold"></i>
+                                                            RDC Attempt: <strong class="text-baou-navy">${sch.rdcAttempt}</strong>
+                                                        </span>
+                                                    </div>
 
                                                     ${latestLog ? `
                                                         <div class="bg-slate-100/80 rounded-xl p-3 text-xs text-slate-700 border border-slate-200/80 mt-2">
