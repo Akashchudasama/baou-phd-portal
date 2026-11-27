@@ -128,6 +128,12 @@
             isSubmitting: false
         };
 
+        function extractMeta(text, key) {
+            if (!text) return '';
+            const m = String(text).match(new RegExp(key + ':\\s*([^|\\n]+)', 'i'));
+            return m ? m[1].trim() : '';
+        }
+
         // Normalize Supabase row into the exact UI shape used by the original portal
         function mapRowToScholar(row) {
             return {
@@ -144,6 +150,10 @@
                 scopusPaperTitle: row.scopus_title || 'Not yet specified',
                 scopusJournal: row.scopus_journal || 'Not yet specified',
                 scopusDoi: row.scopus_doi || 'Pending update',
+                courseworkStatus: row.coursework_status || extractMeta(row.progress_till_date, 'Coursework') || 'Ongoing',
+                rdcAttempt: (row.rdc_attempt !== undefined && row.rdc_attempt !== null && String(row.rdc_attempt).trim() !== '')
+                    ? String(row.rdc_attempt).trim()
+                    : (extractMeta(row.progress_till_date, 'RDC Attempt') || extractMeta(row.progress_till_date, 'RDC') || '0'),
                 initialProgress: row.progress_till_date || '',
                 approvalStatus: toTitleCaseStatus(row.approval_status),
                 registeredAt: row.created_at ? String(row.created_at).split('T')[0] : new Date().toISOString().split('T')[0],
@@ -365,13 +375,10 @@
         function togglePassingYearField() {
             const typeVal = document.getElementById('reg-scholar-type').value;
             const passingGroup = document.getElementById('passing-year-group');
-            const progressLabel = document.getElementById('reg-progress-label');
             if (typeVal === 'Passed / Alumni Scholar') {
                 passingGroup.classList.remove('hidden');
-                progressLabel.textContent = 'PhD Completion Details, Viva Date & Post-PhD Summary *';
             } else {
                 passingGroup.classList.add('hidden');
-                progressLabel.textContent = 'PhD Progress Summary Till Date (Coursework, RDC, Chapters, Fieldwork) *';
             }
         }
 
@@ -390,9 +397,11 @@
             const scopusStatus = document.getElementById('reg-scopus-status').value;
             const scopusPaperTitle = document.getElementById('reg-scopus-title').value.trim();
             const scopusJournal = document.getElementById('reg-scopus-journal').value.trim();
-            const initialProgress = document.getElementById('reg-progress').value.trim();
+            const courseworkStatus = document.getElementById('reg-coursework').value;
+            const rdcAttempt = document.getElementById('reg-rdc').value;
+            const initialProgress = `Coursework: ${courseworkStatus} | RDC Attempt: ${rdcAttempt}`;
 
-            if (!fullName || !email || !phone || !thesisTitle || !initialProgress) {
+            if (!fullName || !email || !phone || !thesisTitle || !courseworkStatus || rdcAttempt === '') {
                 showToast('Please fill all mandatory fields marked with *.', 'error');
                 return;
             }
@@ -431,6 +440,8 @@
                     scopus_status: scopusStatus,
                     scopus_title: scopusPaperTitle || 'Not yet specified',
                     scopus_journal: scopusJournal || 'Not yet specified',
+                    coursework_status: courseworkStatus,
+                    rdc_attempt: rdcAttempt,
                     progress_till_date: initialProgress,
                     approval_status: 'pending',
                     vc_remark: '',
@@ -881,10 +892,26 @@
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label id="reg-progress-label" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">PhD Progress Summary Till Date (Coursework, RDC, Chapters, Fieldwork) *</label>
-                                        <textarea id="reg-progress" rows="3" required placeholder="Summarize your work completed so far under Prof. (Dr.) Ami Upadhyay..."
-                                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-baou-gold outline-none text-sm"></textarea>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">PhD Coursework *</label>
+                                            <select id="reg-coursework" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-baou-gold outline-none text-sm font-medium">
+                                                <option value="Completed">1. Completed</option>
+                                                <option value="Ongoing">2. Ongoing</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">RDC Attempt *</label>
+                                            <select id="reg-rdc" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-baou-gold outline-none text-sm font-medium">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                                <option value="3">3</option>
+                                                <option value="4">4</option>
+                                                <option value="5">5</option>
+                                                <option value="6">6</option>
+                                            </select>
+                                        </div>
                                     </div>
 
                                     <button type="submit" ${state.isSubmitting ? 'disabled' : ''} class="w-full py-3.5 px-6 rounded-xl bg-baou-gold hover:bg-amber-500 text-baou-dark font-bold text-sm shadow-lg transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">
@@ -1032,7 +1059,11 @@
 
                                                 <div class="mt-3 p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs space-y-1.5">
                                                     <div><span class="font-semibold text-slate-700">Thesis:</span> ${sch.thesisTitle}</div>
-                                                    <div><span class="font-semibold text-slate-700">Progress Till Date:</span> ${sch.initialProgress}</div>
+                                                    <div class="flex flex-wrap gap-3">
+                                                        <span><span class="font-semibold text-slate-700">PhD Coursework:</span> ${sch.courseworkStatus}</span>
+                                                        <span>•</span>
+                                                        <span><span class="font-semibold text-slate-700">RDC Attempt:</span> ${sch.rdcAttempt}</span>
+                                                    </div>
                                                     <div class="pt-1 flex flex-wrap items-center gap-2">
                                                         ${getScopusBadge(sch.scopusStatus)}
                                                         <span class="text-slate-600"><i class="fa-solid fa-envelope mr-1"></i>${sch.email}</span>
@@ -1186,7 +1217,7 @@
                             <p><span class="font-semibold text-slate-700">Thesis Title:</span> ${scholar.thesisTitle}</p>
                             <p><span class="font-semibold text-slate-700">Enrollment No:</span> ${scholar.enrollmentNo}</p>
                             ${scholar.passingYear ? `<p><span class="font-semibold text-purple-800">Passing Year:</span> ${scholar.passingYear}</p>` : ''}
-                            <p><span class="font-semibold text-slate-700">Initial Summary:</span> ${scholar.initialProgress}</p>
+                            <p><span class="font-semibold text-slate-700">PhD Coursework:</span> ${scholar.courseworkStatus} • <span class="font-semibold text-slate-700">RDC Attempt:</span> ${scholar.rdcAttempt}</p>
                         </div>
                         <div class="space-y-2 border-t md:border-t-0 md:border-l border-slate-200 pt-3 md:pt-0 md:pl-4">
                             <div class="font-bold uppercase tracking-wider text-baou-navy">Current Scopus Publication Record</div>
@@ -1294,9 +1325,21 @@
                             </div>
                             <h2 class="font-serif text-2xl sm:text-3xl font-bold text-baou-navy">${scholar.fullName}</h2>
                             <p class="text-sm text-slate-600 font-medium">${scholar.department} • Enrollment: ${scholar.enrollmentNo}</p>
-                            <p class="text-sm text-slate-800 bg-slate-50 p-3 rounded-xl border border-slate-200/80">
-                                <strong class="text-baou-navy">Research Topic:</strong> ${scholar.thesisTitle}
-                            </p>
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-2.5">
+                                <p class="text-sm text-slate-800">
+                                    <strong class="text-baou-navy">Research Topic:</strong> ${scholar.thesisTitle}
+                                </p>
+                                <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200/80 text-xs">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200 font-semibold text-slate-700">
+                                        <i class="fa-solid fa-book text-baou-gold"></i>
+                                        PhD Coursework: <strong class="${scholar.courseworkStatus === 'Completed' ? 'text-emerald-700' : 'text-amber-700'}">${scholar.courseworkStatus}</strong>
+                                    </span>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200 font-semibold text-slate-700">
+                                        <i class="fa-solid fa-list-ol text-baou-gold"></i>
+                                        RDC Attempt: <strong class="text-baou-navy">${scholar.rdcAttempt}</strong>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="bg-baou-navy text-white rounded-2xl p-5 flex-shrink-0 lg:w-72 space-y-2 shadow-md">

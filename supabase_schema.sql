@@ -1,11 +1,9 @@
--- Run this entire SQL script inside your Supabase Project -> SQL Editor -> New Query
-
 create table if not exists public.phd_scholars (
   id uuid primary key default gen_random_uuid(),
   category text not null default 'active', -- 'active' or 'passed'
   enrollment_no text default 'Pending Allotment',
   passing_year text default '',
-  current_role text default '',
+  "current_role" text default '',
   name text not null,
   department text not null,
   email text unique not null,
@@ -14,13 +12,20 @@ create table if not exists public.phd_scholars (
   scopus_status text not null default 'Not Started',
   scopus_title text default '',
   scopus_journal text default '',
-  progress_till_date text not null,
+  coursework_status text not null default 'Ongoing', -- 'Completed' or 'Ongoing'
+  rdc_attempt text not null default '0', -- '0' to '6'
+  progress_till_date text not null default '',
   current_issues text default '',
   approval_status text not null default 'pending', -- 'pending', 'approved', 'rejected'
   vc_remark text default '',
   logs jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now()
 );
+
+-- Safely add the new columns if your table already exists
+alter table public.phd_scholars
+  add column if not exists coursework_status text not null default 'Ongoing',
+  add column if not exists rdc_attempt text not null default '0';
 
 -- Enable Row Level Security and grant public API permissions for the portal
 alter table public.phd_scholars enable row level security;
@@ -46,3 +51,6 @@ create policy "Allow portal update access"
   to anon, authenticated
   using (true)
   with check (true);
+
+-- Refresh PostgREST schema cache
+NOTIFY pgrst, 'reload schema';
